@@ -1,15 +1,12 @@
 package api
 
 import (
-	"fmt"
+	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-)
-
-var (
-	defaultDockerRemoteAddress = "127.0.0.1"
-	defaultDockerRemotePort    = "2346"
+	"os"
+	"strings"
 )
 
 func errorPanic(e error) {
@@ -18,9 +15,7 @@ func errorPanic(e error) {
 	}
 }
 
-func sendHTTPReq(domain string, port string, path string, ReqMethod string) string {
-	URI := domain + port + path
-
+func sendHTTPReq(URI string, ReqMethod string) []uint8 {
 	var response *http.Response
 	var err error
 
@@ -29,24 +24,42 @@ func sendHTTPReq(domain string, port string, path string, ReqMethod string) stri
 		response, err = http.Get(URI)
 		errorPanic(err)
 	case "POST":
-		postValue, _ := url.ParseQuery(path)
-		errorPanic(err)
-		response, err = http.PostForm(URI, postValue)
+		response, err = http.PostForm(URI, nil)
 		errorPanic(err)
 	default:
-		return "Missing Request Method"
+		return []uint8("Missing Request Method")
 	}
 
 	defer response.Body.Close()
 
 	responseResult, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic("read error")
-	}
-
-	return string(responseResult)
+	errorPanic(err)
+	return responseResult
 }
 
-func InspectImage(imageId string) {
-	fmt.Println(imageId)
+func InspectImageLayers(domain string, port string, imageID string) *imageInspectInfo {
+	URI := domain + ":" + port + "/images/" + imageID + "/json"
+	st := sendHTTPReq(URI, "GET")
+
+	var imageLayout imageInspectInfo
+	err := json.Unmarshal(st, &imageLayout)
+	errorPanic(err)
+
+	return &imageLayout
+}
+
+func ExportImage(domain string, port string, imageID string) {
+	URI := domain + ":" + port + "/images/" + imageID + "/get"
+	// use long imageID for image tar file
+	imageLayout := InspectImageLayers(domain, port, imageID)
+	imageID = strings.TrimPrefix(imageLayout.Id, "sha256:")
+
+	imageFile, err := os.Create(imageID + ".tar.gz")
+	errorPanic(err)
+	defer imageFile.Close()
+
+	data := string(sendHTTPReq(URI, "GET"))
+	reader := strings.NewReader(data)
+	_, err = io.Copy(imageFile, reader)
+	errorPanic(err)
 }
