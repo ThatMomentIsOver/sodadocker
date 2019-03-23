@@ -46,3 +46,6 @@ type RootFS struct {
 	Type   string
 	Layers []string
 }
+
+type layerJson struct {
+}

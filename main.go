@@ -2,6 +2,8 @@ package main
 
 import (
 	"api"
+	"fmt"
+	"strings"
 )
 
 var (
@@ -11,5 +13,11 @@ var (
 )
 
 func main() {
-	api.ExportImage(defaultDockerRemoteAddress, defaultDockerRemotePort, defaultDockerID)
+	//api.ExportImage(defaultDockerRemoteAddress, defaultDockerRemotePort, defaultDockerID)
+	imageLayout := api.InspectImageLayers(defaultDockerRemoteAddress, defaultDockerRemotePort, defaultDockerID)
+	imageID := strings.TrimPrefix(imageLayout.Id, "sha256:")
+
+	if err := api.DecompressLayer(imageID); err != nil {
+		fmt.Println(err)
+	}
 }
