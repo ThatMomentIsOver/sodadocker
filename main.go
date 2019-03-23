@@ -20,4 +20,7 @@ func main() {
 	if err := api.DecompressLayer(imageID); err != nil {
 		fmt.Println(err)
 	}
+
+	api.ScanImage()
+
 }

@@ -1,8 +1,8 @@
 package api
 
 type imageInspectInfo struct {
-	Id              string
-	Container       string
+	Id              string `json:"id"`
+	Container       string `json:""container"`
 	Comment         string
 	Os              string
 	Architecture    string
@@ -47,5 +47,8 @@ type RootFS struct {
 	Layers []string
 }
 
-type layerJson struct {
+type manifest struct {
+	Config   string
+	Layers   []string
+	RepoTags string
 }

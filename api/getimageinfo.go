@@ -3,6 +3,7 @@ package api
 import (
 	"archive/tar"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -117,8 +118,23 @@ func DecompressLayer(imageID string) error {
 	return nil
 }
 
-func scanImage() {
+func ScanImage() {
+	for i, lenLayersList := 0, len(layersName); i < lenLayersList; i++ {
+		path := layersName[i]
+		if strings.Contains(path, "manifest") {
+			filePtr, err := ioutil.ReadFile(path)
+			errorPanic(err)
 
+			data := strings.Replace(string(filePtr), "\n", "", -1)
+			data = strings.Trim(strings.Trim(data, "["), "]")
+
+			var manifest_data manifest
+			err = json.Unmarshal([]uint8(data), &manifest_data)
+			errorPanic(err)
+			fmt.Printf("%+v", manifest_data)
+
+		}
+	}
 }
 
 func destructorAll() {
