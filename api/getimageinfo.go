@@ -16,6 +16,7 @@ var (
 	DockerRemoteAddress string
 	DockerRemotePort    string
 	DockerID            string
+	TopLayerID          string
 	layersName          map[string][]string
 )
 
@@ -107,7 +108,16 @@ func DecompressImage() error {
 }
 
 func DecompressLayer(layerID string) error {
-	return nil
+	filePath := "imagesTemp" + "/" + layerID + "/layer.tar"
+	descPath := "imagesTemp" + "/" + TopLayerID + "/" + "layer"
+	if _, err := os.Stat(descPath); os.IsNotExist(err) {
+		err := os.Mkdir(descPath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	return DecompressTar(filePath, descPath)
 }
 
 func DecompressTar(srcPath, descPath string) error {
@@ -151,8 +161,7 @@ func DecompressTar(srcPath, descPath string) error {
 	return nil
 }
 
-func GetManifestJsonData() *manifest {
-	var mani_data manifest
+func getManifestJsonData() *manifest {
 	filePtr, err := ioutil.ReadFile("imagesTemp" + "/" + "manifest.json")
 	errorPanic(err)
 
@@ -163,38 +172,14 @@ func GetManifestJsonData() *manifest {
 	err = json.Unmarshal([]uint8(data), &manifest_data)
 	errorPanic(err)
 
-	return &mani_data
+	return &manifest_data
 }
 
-/*
 func ScanImage() {
-	var osLayerID string
-	for i, lenLayersList := 0, len(layersName); i < lenLayersList; i++ {
-		path := layersName[i]
-		if strings.Contains(path, "manifest") {
-			filePtr, err := ioutil.ReadFile(path)
-			errorPanic(err)
+	TopLayerID = strings.Trim(getManifestJsonData().Layers[0], "/layer.tar")
+	DecompressLayer(TopLayerID)
 
-			data := strings.Replace(string(filePtr), "\n", "", -1)
-			data = strings.Trim(strings.Trim(data, "["), "]")
-
-			var manifest_data manifest
-			err = json.Unmarshal([]uint8(data), &manifest_data)
-			errorPanic(err)
-			osLayerID = manifest_data.Layers[0]
-			break
-		}
-	}
-
-	fmt.Println("layer:", osLayerID)
-		fmt.Println("list:", layersName)
-		if osLayerID != "" {
-			DecompressLayer(osLayerID)
-		} else {
-			panic("local path missing current layer")
-		}
 }
-*/
 
 func getImageFullID(short_imageID string) string {
 	imageLayout := InspectImageLayers(short_imageID)
