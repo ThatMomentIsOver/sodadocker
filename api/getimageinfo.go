@@ -2,8 +2,10 @@ package api
 
 import (
 	"archive/tar"
+	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -18,6 +20,7 @@ var (
 	DockerID            string
 	TopLayerID          string
 	layersName          map[string][]string
+	AllDpkg             map[string]string
 )
 
 func errorPanic(e error) {
@@ -158,6 +161,7 @@ func DecompressTar(srcPath, descPath string) error {
 			log.Println("Decompressing:", path)
 		}
 	}
+	fPtr.Close()
 	return nil
 }
 
@@ -177,8 +181,28 @@ func getManifestJsonData() *manifest {
 
 func ScanImage() {
 	TopLayerID = strings.Trim(getManifestJsonData().Layers[0], "/layer.tar")
-	DecompressLayer(TopLayerID)
+	path := "imagesTemp" + "/" + TopLayerID + "/" + "layer" +
+		"/var/lib/dpkg/status"
+	errd := DecompressLayer(TopLayerID)
+	if errd != nil {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			//TODO: [too many open files] error causes no "dpkg status" file to be obtained
+			panic(errd)
+		}
+	}
 
+	file, err := os.Open(path)
+	errorPanic(err)
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getImageFullID(short_imageID string) string {
