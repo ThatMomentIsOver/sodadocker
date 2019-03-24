@@ -58,3 +58,10 @@ type manifest struct {
 	Layers   []string
 	RepoTags string
 }
+
+type dkpgInfo struct {
+	Package      string
+	Version      string
+	Status       string
+	Architecture string
+}

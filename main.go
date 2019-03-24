@@ -3,6 +3,7 @@ package main
 import (
 	"api"
 	"flag"
+	"fmt"
 )
 
 var (
@@ -22,5 +23,6 @@ func main() {
 			fmt.Println(err)
 		}
 	*/
-	api.ScanImage()
+	api.GetImageDpkg()
+	fmt.Println(len(api.AllDpkg))
 }

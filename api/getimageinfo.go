@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -179,7 +178,7 @@ func getManifestJsonData() *manifest {
 	return &manifest_data
 }
 
-func ScanImage() {
+func GetImageDpkg() {
 	TopLayerID = strings.Trim(getManifestJsonData().Layers[0], "/layer.tar")
 	path := "imagesTemp" + "/" + TopLayerID + "/" + "layer" +
 		"/var/lib/dpkg/status"
@@ -190,19 +189,26 @@ func ScanImage() {
 			panic(errd)
 		}
 	}
-
 	file, err := os.Open(path)
 	errorPanic(err)
 	defer file.Close()
 
+	dpkgList := make(map[string]string)
 	scanner := bufio.NewScanner(file)
+	var package_name string
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "Package") {
+			package_name = strings.TrimPrefix(line, "Package: ")
+		} else if strings.HasPrefix(line, "Version") {
+			dpkgList[package_name] = strings.TrimPrefix(line, "Version: ")
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	AllDpkg = dpkgList
 }
 
 func getImageFullID(short_imageID string) string {
