@@ -1,0 +1,5 @@
+{
+  "DockerRemoteAddress" : "http://127.0.0.1",
+	"DockerRemotePort"    : "2356",
+	"DockerID"            : "0b1edfbffd27"
+}

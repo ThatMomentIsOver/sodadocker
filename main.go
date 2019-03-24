@@ -2,8 +2,7 @@ package main
 
 import (
 	"api"
-	"fmt"
-	"strings"
+	"flag"
 )
 
 var (
@@ -13,14 +12,15 @@ var (
 )
 
 func main() {
-	//api.ExportImage(defaultDockerRemoteAddress, defaultDockerRemotePort, defaultDockerID)
-	imageLayout := api.InspectImageLayers(defaultDockerRemoteAddress, defaultDockerRemotePort, defaultDockerID)
-	imageID := strings.TrimPrefix(imageLayout.Id, "sha256:")
+	var configPath = flag.String("config", "./src/api/config.json", "sodadocker config path")
+	flag.Parse()
+	api.LoadConfig(*configPath)
+	//api.ExportImage("")
 
-	if err := api.DecompressLayer(imageID); err != nil {
-		fmt.Println(err)
-	}
-
-	api.ScanImage()
-
+	/*
+		if err := api.DecompressImage(); err != nil {
+			fmt.Println(err)
+		}
+	*/
+	api.GetManifestJsonData()
 }

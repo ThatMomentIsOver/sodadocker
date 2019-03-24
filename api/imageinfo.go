@@ -1,5 +1,11 @@
 package api
 
+type configData struct {
+	DockerRemoteAddress string
+	DockerRemotePort    string
+	DockerID            string
+}
+
 type imageInspectInfo struct {
 	Id              string `json:"id"`
 	Container       string `json:""container"`

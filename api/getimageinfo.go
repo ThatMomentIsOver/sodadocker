@@ -3,7 +3,7 @@ package api
 import (
 	"archive/tar"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,7 +13,10 @@ import (
 )
 
 var (
-	layersName []string
+	DockerRemoteAddress string
+	DockerRemotePort    string
+	DockerID            string
+	layersName          map[string][]string
 )
 
 func errorPanic(e error) {
@@ -44,8 +47,22 @@ func sendHTTPReq(URI string, ReqMethod string) []uint8 {
 	return responseResult
 }
 
-func InspectImageLayers(domain string, port string, imageID string) *imageInspectInfo {
-	URI := domain + ":" + port + "/images/" + imageID + "/json"
+func LoadConfig(path string) {
+	data, err := ioutil.ReadFile(path)
+	errorPanic(err)
+	var c configData
+	err = json.Unmarshal(data, &c)
+	errorPanic(err)
+	DockerRemoteAddress = c.DockerRemoteAddress
+	DockerRemotePort = c.DockerRemotePort
+	DockerID = getImageFullID(c.DockerID)
+}
+
+func InspectImageLayers(imageID string) *imageInspectInfo {
+	if imageID == "" {
+		imageID = DockerID
+	}
+	URI := DockerRemoteAddress + ":" + DockerRemotePort + "/images/" + imageID + "/json"
 	st := sendHTTPReq(URI, "GET")
 
 	var imageLayout imageInspectInfo
@@ -55,10 +72,13 @@ func InspectImageLayers(domain string, port string, imageID string) *imageInspec
 	return &imageLayout
 }
 
-func ExportImage(domain string, port string, imageID string) {
-	URI := domain + ":" + port + "/images/" + imageID + "/get"
+func ExportImage(imageID string) {
+	if imageID == "" {
+		imageID = DockerID
+	}
+	URI := DockerRemoteAddress + ":" + DockerRemotePort + "/images/" + imageID + "/get"
 	// use long imageID for image tar file
-	imageLayout := InspectImageLayers(domain, port, imageID)
+	imageLayout := InspectImageLayers("")
 	imageID = strings.TrimPrefix(imageLayout.Id, "sha256:")
 
 	if _, err := os.Stat("imagesTemp"); os.IsNotExist(err) {
@@ -75,12 +95,25 @@ func ExportImage(domain string, port string, imageID string) {
 	errorPanic(err)
 }
 
-func DecompressLayer(imageID string) error {
+func DecompressImage() error {
+	imageID := DockerID
+	if _, imageHasDecompress := layersName["imageID"]; imageHasDecompress {
+		return errors.New("image decompress before")
+	}
 	filePath := "imagesTemp" + "/" + imageID + ".tar"
-	fPtr, err := os.Open(filePath)
+	err := DecompressTar(filePath, "imagesTemp")
+	errorPanic(err)
+	return nil
+}
+
+func DecompressLayer(layerID string) error {
+	return nil
+}
+
+func DecompressTar(srcPath, descPath string) error {
+	fPtr, err := os.Open(srcPath)
 	errorPanic(err)
 	tarPtr := tar.NewReader(fPtr)
-	defer destructorAll()
 	for {
 		header, err := tarPtr.Next()
 		if err != nil {
@@ -90,8 +123,8 @@ func DecompressLayer(imageID string) error {
 				return err
 			}
 		}
-		path := "imagesTemp" + "/" + header.Name
-		layersName = append(layersName, path)
+
+		path := descPath + "/" + header.Name
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -118,7 +151,24 @@ func DecompressLayer(imageID string) error {
 	return nil
 }
 
+func GetManifestJsonData() *manifest {
+	var mani_data manifest
+	filePtr, err := ioutil.ReadFile("imagesTemp" + "/" + "manifest.json")
+	errorPanic(err)
+
+	data := strings.Replace(string(filePtr), "\n", "", -1)
+	data = strings.Trim(strings.Trim(data, "["), "]")
+
+	var manifest_data manifest
+	err = json.Unmarshal([]uint8(data), &manifest_data)
+	errorPanic(err)
+
+	return &mani_data
+}
+
+/*
 func ScanImage() {
+	var osLayerID string
 	for i, lenLayersList := 0, len(layersName); i < lenLayersList; i++ {
 		path := layersName[i]
 		if strings.Contains(path, "manifest") {
@@ -131,10 +181,25 @@ func ScanImage() {
 			var manifest_data manifest
 			err = json.Unmarshal([]uint8(data), &manifest_data)
 			errorPanic(err)
-			fmt.Printf("%+v", manifest_data)
-
+			osLayerID = manifest_data.Layers[0]
+			break
 		}
 	}
+
+	fmt.Println("layer:", osLayerID)
+		fmt.Println("list:", layersName)
+		if osLayerID != "" {
+			DecompressLayer(osLayerID)
+		} else {
+			panic("local path missing current layer")
+		}
+}
+*/
+
+func getImageFullID(short_imageID string) string {
+	imageLayout := InspectImageLayers(short_imageID)
+	imageID := strings.TrimPrefix(imageLayout.Id, "sha256:")
+	return imageID
 }
 
 func destructorAll() {
