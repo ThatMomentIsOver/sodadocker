@@ -19,7 +19,7 @@ var (
 	DockerID            string
 	TopLayerID          string
 	layersName          map[string][]string
-	AllDpkg             map[string]string
+	AllDpkg             map[string]dpkgInfo
 )
 
 func errorPanic(e error) {
@@ -137,6 +137,7 @@ func DecompressTar(srcPath, descPath string) error {
 		}
 
 		path := descPath + "/" + header.Name
+		log.Println("Decompressing:", path)
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -151,13 +152,12 @@ func DecompressTar(srcPath, descPath string) error {
 				if err != nil {
 					return err
 				}
-				defer createFilePtr.Close()
 				_, err = io.Copy(createFilePtr, tarPtr)
 				if err != nil {
 					return err
 				}
+				createFilePtr.Close()
 			}
-			log.Println("Decompressing:", path)
 		}
 	}
 	fPtr.Close()
@@ -182,26 +182,49 @@ func GetImageDpkg() {
 	TopLayerID = strings.Trim(getManifestJsonData().Layers[0], "/layer.tar")
 	path := "imagesTemp" + "/" + TopLayerID + "/" + "layer" +
 		"/var/lib/dpkg/status"
-	errd := DecompressLayer(TopLayerID)
-	if errd != nil {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			//TODO: [too many open files] error causes no "dpkg status" file to be obtained
-			panic(errd)
-		}
-	}
+		/*
+			errd := DecompressLayer(TopLayerID)
+			if errd != nil {
+				if _, err := os.Stat(path); os.IsNotExist(err) {
+					//TODO: [too many open files] error causes no "dpkg status" file to be obtained
+					panic(errd)
+				}
+			}
+		*/
 	file, err := os.Open(path)
 	errorPanic(err)
 	defer file.Close()
 
-	dpkgList := make(map[string]string)
+	dpkgList := make(map[string]dpkgInfo)
 	scanner := bufio.NewScanner(file)
-	var package_name string
+	var package_name, source_name string
+	//package_flag := false
+	//source_flag := false
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, "Package") {
+			//package_flag = true
 			package_name = strings.TrimPrefix(line, "Package: ")
+			source_name = ""
+		} else if strings.HasPrefix(line, "Source") {
+			//source_flag = true
+			source_name = strings.TrimPrefix(line, "Source: ")
 		} else if strings.HasPrefix(line, "Version") {
-			dpkgList[package_name] = strings.TrimPrefix(line, "Version: ")
+			version := strings.TrimPrefix(line, "Version: ")
+			if source_name != "" {
+				dpkgList[package_name] = dpkgInfo{Package: package_name, Source: source_name, Version: version}
+			} else {
+				dpkgList[package_name] = dpkgInfo{Package: package_name, Version: version}
+			}
+			/*
+				if package_flag && source_flag {
+					dpkgList[package_name] = dpkgInfo{Package: package_name, Source: source_name, Version: version}
+				} else if package_flag {
+					dpkgList[package_name] = dpkgInfo{Package: package_name, Version: version}
+				}
+				package_flag = false
+				source_flag = false
+			*/
 		}
 	}
 

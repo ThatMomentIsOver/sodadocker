@@ -59,9 +59,8 @@ type manifest struct {
 	RepoTags string
 }
 
-type dkpgInfo struct {
-	Package      string
-	Version      string
-	Status       string
-	Architecture string
+type dpkgInfo struct {
+	Package string
+	Source  string
+	Version string
 }
