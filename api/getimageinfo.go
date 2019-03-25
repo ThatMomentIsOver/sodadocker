@@ -26,18 +26,6 @@ func errorPanic(e error) {
 		panic(e)
 	}
 }
-
-func LoadConfig(path string) {
-	data, err := ioutil.ReadFile(path)
-	errorPanic(err)
-	var c configData
-	err = json.Unmarshal(data, &c)
-	errorPanic(err)
-	DockerRemoteAddress = c.DockerRemoteAddress
-	DockerRemotePort = c.DockerRemotePort
-	DockerID = getImageFullID(c.DockerID)
-}
-
 func InspectImageLayers(imageID string) *imageInspectInfo {
 	if imageID == "" {
 		imageID = DockerID

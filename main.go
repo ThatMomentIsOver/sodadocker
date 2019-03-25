@@ -27,5 +27,6 @@ func main() {
 		}
 	*/
 	//api.PullNvdCVEDB()
-	api.DecompressCVEDB()
+	//api.DecompressCVEDB()
+	api.ConnectSQL()
 }

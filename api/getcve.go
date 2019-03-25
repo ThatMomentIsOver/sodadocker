@@ -2,6 +2,7 @@ package api
 
 import (
 	"compress/gzip"
+	"database/sql"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,10 +11,18 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
-	nvdURI = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz"
+	nvdURI        = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%d.json.gz"
+	MySQLUserName string
+	MySQLPassword string
+	MySQLIP       string
+	MySQLport     string
+	MySQLdbName   string
+	db            *sql.DB
 )
 
 func pullNvdCVEDB() {
@@ -49,11 +58,12 @@ func decompressGz(filePath, descPath string) {
 	if _, err := os.Stat(descPath); os.IsNotExist(err) {
 		createFilePtr, err := os.Create(descPath)
 		errorPanic(err)
+		log.Println(descPath + "compressing..")
 		err = ioutil.WriteFile(descPath, data, os.ModePerm)
 		errorPanic(err)
 		createFilePtr.Close()
 	} else {
-		log.Println(descPath + "exist, skip it...")
+		log.Println(descPath + " exist, skip it...")
 	}
 	errorPanic(err)
 
@@ -70,10 +80,18 @@ func DecompressCVEDB() {
 		go func() {
 			defer func() {
 				wg.Done()
-				log.Println("decompress" + srcPath + " done")
 			}()
 			decompressGz(srcPath, descPath)
 		}()
 	}
 	wg.Wait()
+}
+
+func ConnectSQL() {
+	var err error
+	dbarg := "%s:%s@tcp(%s:%s/%s?charset=utf8)"
+	db, err = sql.Open("mysql", fmt.Sprintf(dbarg, MySQLUserName, MySQLPassword,
+		MySQLIP, MySQLport, MySQLdbName))
+	errorPanic(err)
+
 }

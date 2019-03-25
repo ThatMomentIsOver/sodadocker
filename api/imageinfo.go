@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 )
@@ -9,6 +10,11 @@ type configData struct {
 	DockerRemoteAddress string
 	DockerRemotePort    string
 	DockerID            string
+	MySQLUserName       string `json:"mySQLUserName"`
+	MySQLIP             string
+	MySQLport           string
+	MySQLPassword       string
+	MySQLdbName         string
 }
 
 type imageInspectInfo struct {
@@ -94,4 +100,21 @@ func sendHTTPReq(URI string, ReqMethod string) []uint8 {
 	responseResult, err := ioutil.ReadAll(response.Body)
 	errorPanic(err)
 	return responseResult
+}
+
+func LoadConfig(path string) {
+	data, err := ioutil.ReadFile(path)
+	errorPanic(err)
+	var c configData
+	err = json.Unmarshal(data, &c)
+	errorPanic(err)
+	DockerRemoteAddress = c.DockerRemoteAddress
+	DockerRemotePort = c.DockerRemotePort
+	DockerID = getImageFullID(c.DockerID)
+
+	MySQLUserName = c.MySQLUserName
+	MySQLIP = c.MySQLIP
+	MySQLport = c.MySQLport
+	MySQLPassword = c.MySQLPassword
+	MySQLdbName = c.MySQLdbName
 }
