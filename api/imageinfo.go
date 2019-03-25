@@ -1,5 +1,10 @@
 package api
 
+import (
+	"io/ioutil"
+	"net/http"
+)
+
 type configData struct {
 	DockerRemoteAddress string
 	DockerRemotePort    string
@@ -60,7 +65,33 @@ type manifest struct {
 }
 
 type dpkgInfo struct {
-	Package string
-	Source  string
-	Version string
+	Package      string
+	Source       string
+	Version      string
+	ValidVersion string
+}
+
+type circlCVEInfo struct {
+}
+
+func sendHTTPReq(URI string, ReqMethod string) []uint8 {
+	var response *http.Response
+	var err error
+
+	switch ReqMethod {
+	case "GET":
+		response, err = http.Get(URI)
+		errorPanic(err)
+	case "POST":
+		response, err = http.PostForm(URI, nil)
+		errorPanic(err)
+	default:
+		return []uint8("Missing Request Method")
+	}
+
+	defer response.Body.Close()
+
+	responseResult, err := ioutil.ReadAll(response.Body)
+	errorPanic(err)
+	return responseResult
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"api"
 	"flag"
-	"fmt"
 )
 
 var (
@@ -17,14 +16,15 @@ func main() {
 	flag.Parse()
 	api.LoadConfig(*configPath)
 	/*
-		api.ExportImage("")
+			api.ExportImage("")
 
-		if err := api.DecompressImage(); err != nil {
-			fmt.Println(err)
+			if err := api.DecompressImage(); err != nil {
+				fmt.Println(err)
+			}
+		api.GetImageDpkg()
+		for k, v := range api.AllDpkg {
+			fmt.Printf("%s : %+v\n", k, v)
 		}
 	*/
-	api.GetImageDpkg()
-	for k, v := range api.AllDpkg {
-		fmt.Printf("%s : %+v\n", k, v)
-	}
+	api.PullNvdCVEDB()
 }

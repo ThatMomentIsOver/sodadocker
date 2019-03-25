@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -26,28 +25,6 @@ func errorPanic(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func sendHTTPReq(URI string, ReqMethod string) []uint8 {
-	var response *http.Response
-	var err error
-
-	switch ReqMethod {
-	case "GET":
-		response, err = http.Get(URI)
-		errorPanic(err)
-	case "POST":
-		response, err = http.PostForm(URI, nil)
-		errorPanic(err)
-	default:
-		return []uint8("Missing Request Method")
-	}
-
-	defer response.Body.Close()
-
-	responseResult, err := ioutil.ReadAll(response.Body)
-	errorPanic(err)
-	return responseResult
 }
 
 func LoadConfig(path string) {
@@ -198,6 +175,7 @@ func GetImageDpkg() {
 	dpkgList := make(map[string]dpkgInfo)
 	scanner := bufio.NewScanner(file)
 	var package_name, source_name string
+	var validVersion string
 	//package_flag := false
 	//source_flag := false
 	for scanner.Scan() {
@@ -211,10 +189,19 @@ func GetImageDpkg() {
 			source_name = strings.TrimPrefix(line, "Source: ")
 		} else if strings.HasPrefix(line, "Version") {
 			version := strings.TrimPrefix(line, "Version: ")
+			less := strings.Index(version, "-")
+			plus := strings.Index(version, "+")
+			if less != -1 {
+				validVersion = string(version[:less])
+			}
+			if plus != -1 {
+				validVersion = string(version[:plus])
+			}
+
 			if source_name != "" {
-				dpkgList[package_name] = dpkgInfo{Package: package_name, Source: source_name, Version: version}
+				dpkgList[package_name] = dpkgInfo{Package: package_name, Source: source_name, Version: version, ValidVersion: validVersion}
 			} else {
-				dpkgList[package_name] = dpkgInfo{Package: package_name, Version: version}
+				dpkgList[package_name] = dpkgInfo{Package: package_name, Version: version, ValidVersion: validVersion}
 			}
 			/*
 				if package_flag && source_flag {
@@ -232,6 +219,7 @@ func GetImageDpkg() {
 		log.Fatal(err)
 	}
 	AllDpkg = dpkgList
+
 }
 
 func getImageFullID(short_imageID string) string {
