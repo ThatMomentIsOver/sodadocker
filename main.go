@@ -26,5 +26,6 @@ func main() {
 			fmt.Printf("%s : %+v\n", k, v)
 		}
 	*/
-	api.PullNvdCVEDB()
+	//api.PullNvdCVEDB()
+	api.DecompressCVEDB()
 }
