@@ -144,6 +144,24 @@ type CVEItems struct {
 	Cve Cve `json:"cve"`
 }
 
+/*
+
+type ProductVul struct {
+	ProductName string
+	AllVul      []Vul
+}
+*/
+
+type Vul struct {
+	CVEID         string
+	AffectVersion []AffectVersion
+}
+
+type AffectVersion struct {
+	LEQ     bool //  AffectVerion <= x :  LEQ = true ;  AffectVersion = x : LEQ = false
+	Version float32
+}
+
 func sendHTTPReq(URI string, ReqMethod string) []uint8 {
 	var response *http.Response
 	var err error
