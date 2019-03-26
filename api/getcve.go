@@ -3,6 +3,7 @@ package api
 import (
 	"compress/gzip"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -93,5 +94,20 @@ func ConnectSQL() {
 	db, err = sql.Open("mysql", fmt.Sprintf(dbarg, MySQLUserName, MySQLPassword,
 		MySQLIP, MySQLport, MySQLdbName))
 	errorPanic(err)
+}
 
+func nvdJsonTrans(filePath string) *nvdJson {
+	f, _ := ioutil.ReadFile(filePath)
+	//errorPanic(err)
+	var nvdf nvdJson
+
+	err := json.Unmarshal(f, &nvdf)
+	errorPanic(err)
+
+	return &nvdf
+}
+
+func UnpackNVDfile() {
+	j := nvdJsonTrans("CVEDB/2002.json")
+	fmt.Printf("%+v", j)
 }

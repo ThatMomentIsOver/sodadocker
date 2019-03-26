@@ -77,7 +77,71 @@ type dpkgInfo struct {
 	ValidVersion string
 }
 
-type circlCVEInfo struct {
+type nvdJson struct {
+	CVEDataType         string     `json:"CVE_data_type"`
+	CVEDataFormat       string     `json:"CVE_data_format"`
+	CVEDataVersion      string     `json:"CVE_data_version"`
+	CVEDataNumberOfCVEs string     `json:"CVE_data_numberOfCVEs"`
+	CVEDataTimestamp    string     `json:"CVE_data_timestamp"`
+	CVEItems            []CVEItems `json:"CVE_Items"`
+}
+
+type CVEDataMeta struct {
+	ID       string `json:"ID"`
+	ASSIGNER string `json:"ASSIGNER"`
+}
+
+type VersionData struct {
+	VersionValue    string `json:"version_value"`
+	VersionAffected string `json:"version_affected"`
+}
+
+type Version struct {
+	VersionData []VersionData `json:"version_data"`
+}
+
+type ProductData struct {
+	ProductName string  `json:"product_name"`
+	Version     Version `json:"version"`
+}
+
+type Product struct {
+	ProductData []ProductData `json:"product_data"`
+}
+
+type VendorData struct {
+	VendorName string  `json:"vendor_name"`
+	Product    Product `json:"product"`
+}
+
+type Vendor struct {
+	VendorData []VendorData `json:"vendor_data"`
+}
+
+type Affects struct {
+	Vendor Vendor `json:"vendor"`
+}
+
+type DescriptionData struct {
+	Lang  string `json:"lang"`
+	Value string `json:"value"`
+}
+
+type Description struct {
+	DescriptionData []DescriptionData `json:"description_data"`
+}
+
+type Cve struct {
+	DataType    string      `json:"data_type"`
+	DataFormat  string      `json:"data_format"`
+	DataVersion string      `json:"data_version"`
+	CVEDataMeta CVEDataMeta `json:"CVE_data_meta"`
+	Affects     Affects     `json:"affects"`
+	Description Description `json:"description"`
+}
+
+type CVEItems struct {
+	Cve Cve `json:"cve"`
 }
 
 func sendHTTPReq(URI string, ReqMethod string) []uint8 {
