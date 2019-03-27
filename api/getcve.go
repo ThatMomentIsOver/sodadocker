@@ -98,40 +98,62 @@ func ConnectSQL() {
 }
 
 func nvdJsonTrans(filePath string) *nvdJson {
-	f, _ := ioutil.ReadFile(filePath)
-	//errorPanic(err)
+	f, err := ioutil.ReadFile(filePath)
+	errorPanic(err)
 	var nvdf nvdJson
 
-	err := json.Unmarshal(f, &nvdf)
+	err = json.Unmarshal(f, &nvdf)
 	errorPanic(err)
 
 	return &nvdf
 }
 
 func UnpackNVDfile() {
-	j := nvdJsonTrans("CVEDB/2002.json")
+	//j := nvdJsonTrans("CVEDB/2002.json")
 
 	var CVEID string
-	AllVulmap := make(map[string][]Vul)
-	for i, l := 0, len(j.CVEItems); i < l; i++ {
-		CVEObject := j.CVEItems[i].Cve
-		CVEID = CVEObject.CVEDataMeta.ID
-		vd := CVEObject.Affects.Vendor.VendorData
+	AllVulmap = make(map[string][]Vul)
 
-		//if j.CVEItems[i].Cve.CVEDataMeta.ID == "CVE-1999-0015" {
-		//	vd := j.CVEItems[i].Cve.Affects.Vendor.VendorData
-		for j, m := 0, len(vd); j < m; j++ {
-			pro := vd[j].Product.ProductData
-			for k, lenProductData := 0, len(pro); k < lenProductData; k++ {
-				ProductName := pro[k].ProductName
-				AllVulmap[ProductName] = append(AllVulmap[ProductName], Vul{
-					CVEID:         CVEID,
-					AffectVersion: pro[k].Version,
-				})
+	for y, year := 2002, 2019; y <= year; y++ {
+		jsonPath := fmt.Sprintf("CVEDB/%d.json", y)
+		log.Println("loading " + jsonPath)
+		j := nvdJsonTrans(jsonPath)
+		for i, l := 0, len(j.CVEItems); i < l; i++ {
+			CVEObject := j.CVEItems[i].Cve
+			CVEID = CVEObject.CVEDataMeta.ID
+			vd := CVEObject.Affects.Vendor.VendorData
+
+			//if j.CVEItems[i].Cve.CVEDataMeta.ID == "CVE-1999-0015" {
+			//	vd := j.CVEItems[i].Cve.Affects.Vendor.VendorData
+			for j, m := 0, len(vd); j < m; j++ {
+				pro := vd[j].Product.ProductData
+				for k, lenProductData := 0, len(pro); k < lenProductData; k++ {
+					ProductName := pro[k].ProductName
+					AllVulmap[ProductName] = append(AllVulmap[ProductName], Vul{
+						CVEID:         CVEID,
+						AffectVersion: pro[k].Version,
+					})
+				}
+				//	}
 			}
-			//	}
 		}
 	}
+}
 
-	fmt.Println(AllVulmap)
+func CheckProductVul(productName string, version string) {
+	for k, v := range AllVulmap {
+		if k == productName {
+			for i, VulCount := 0, len(v); i < VulCount; i++ {
+				AffectVersion := v[i].AffectVersion.VersionData
+				CVEID := v[i].CVEID
+				for j, versionCount := 0, len(AffectVersion); j < versionCount; j++ {
+					CVEDBinfoVersion := AffectVersion[j].VersionValue
+					if CVEDBinfoVersion >= version {
+						fmt.Println(CVEID)
+						break
+					}
+				}
+			}
+		}
+	}
 }

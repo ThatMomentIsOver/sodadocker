@@ -152,6 +152,10 @@ type ProductVul struct {
 }
 */
 
+type ScanResult struct {
+	CVEID []string
+}
+
 type Vul struct {
 	CVEID         string
 	AffectVersion Version

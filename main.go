@@ -29,4 +29,5 @@ func main() {
 	//api.PullNvdCVEDB()
 	//api.DecompressCVEDB()
 	api.UnpackNVDfile()
+	api.CheckProductVul("gcc", "2.7.2")
 }
