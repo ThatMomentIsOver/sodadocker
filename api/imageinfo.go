@@ -154,7 +154,7 @@ type ProductVul struct {
 
 type Vul struct {
 	CVEID         string
-	AffectVersion []AffectVersion
+	AffectVersion Version
 }
 
 type AffectVersion struct {

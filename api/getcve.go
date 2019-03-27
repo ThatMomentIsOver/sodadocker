@@ -110,13 +110,28 @@ func nvdJsonTrans(filePath string) *nvdJson {
 
 func UnpackNVDfile() {
 	j := nvdJsonTrans("CVEDB/2002.json")
-	for i, l := 0, len(j.CVEItems); i < l; i++ {
-		if j.CVEItems[i].Cve.CVEDataMeta.ID == "CVE-1999-0015" {
-			vd := j.CVEItems[i].Cve.Affects.Vendor.VendorData
-			for j, m := 0, len(vd); j < m; j++ {
-				fmt.Println(vd[j])
-			}
 
+	var CVEID string
+	AllVulmap := make(map[string][]Vul)
+	for i, l := 0, len(j.CVEItems); i < l; i++ {
+		CVEObject := j.CVEItems[i].Cve
+		CVEID = CVEObject.CVEDataMeta.ID
+		vd := CVEObject.Affects.Vendor.VendorData
+
+		//if j.CVEItems[i].Cve.CVEDataMeta.ID == "CVE-1999-0015" {
+		//	vd := j.CVEItems[i].Cve.Affects.Vendor.VendorData
+		for j, m := 0, len(vd); j < m; j++ {
+			pro := vd[j].Product.ProductData
+			for k, lenProductData := 0, len(pro); k < lenProductData; k++ {
+				ProductName := pro[k].ProductName
+				AllVulmap[ProductName] = append(AllVulmap[ProductName], Vul{
+					CVEID:         CVEID,
+					AffectVersion: pro[k].Version,
+				})
+			}
+			//	}
 		}
 	}
+
+	fmt.Println(AllVulmap)
 }
