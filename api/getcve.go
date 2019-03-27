@@ -27,7 +27,7 @@ var (
 	AllVulmap     map[string][]Vul // key = ProductName
 )
 
-func pullNvdCVEDB() {
+func PullNvdCVEDB() {
 
 	if _, err := os.Stat("CVEDB"); os.IsNotExist(err) {
 		err := os.Mkdir("CVEDB", os.ModePerm)

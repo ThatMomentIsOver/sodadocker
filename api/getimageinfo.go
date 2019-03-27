@@ -147,15 +147,13 @@ func GetImageDpkg() {
 	TopLayerID = strings.Trim(getManifestJsonData().Layers[0], "/layer.tar")
 	path := "imagesTemp" + "/" + TopLayerID + "/" + "layer" +
 		"/var/lib/dpkg/status"
-		/*
-			errd := DecompressLayer(TopLayerID)
-			if errd != nil {
-				if _, err := os.Stat(path); os.IsNotExist(err) {
-					//TODO: [too many open files] error causes no "dpkg status" file to be obtained
-					panic(errd)
-				}
-			}
-		*/
+	errd := DecompressLayer(TopLayerID)
+	if errd != nil {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			//TODO: [too many open files] error causes no "dpkg status" file to be obtained
+			panic(errd)
+		}
+	}
 	file, err := os.Open(path)
 	errorPanic(err)
 	defer file.Close()
@@ -219,4 +217,5 @@ func getImageFullID(short_imageID string) string {
 
 func destructorAll() {
 	os.RemoveAll("imagesTemp")
+	os.RemoveAll("CVEDB")
 }
