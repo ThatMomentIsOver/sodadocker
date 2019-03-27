@@ -206,6 +206,7 @@ func GetImageDpkg() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("loaded dpkg done...")
 	AllDpkg = dpkgList
 
 }
@@ -217,5 +218,5 @@ func getImageFullID(short_imageID string) string {
 }
 
 func destructorAll() {
-	//	os.RemoveAll("imagesTemp")
+	os.RemoveAll("imagesTemp")
 }

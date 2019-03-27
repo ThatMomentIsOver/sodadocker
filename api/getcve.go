@@ -140,7 +140,8 @@ func UnpackNVDfile() {
 	}
 }
 
-func CheckProductVul(productName string, version string) {
+func CheckProductVul(productName string, version string) []string {
+	var ret []string
 	for k, v := range AllVulmap {
 		if k == productName {
 			for i, VulCount := 0, len(v); i < VulCount; i++ {
@@ -149,11 +150,12 @@ func CheckProductVul(productName string, version string) {
 				for j, versionCount := 0, len(AffectVersion); j < versionCount; j++ {
 					CVEDBinfoVersion := AffectVersion[j].VersionValue
 					if CVEDBinfoVersion >= version {
-						fmt.Println(CVEID)
+						ret = append(ret, CVEID)
 						break
 					}
 				}
 			}
 		}
 	}
+	return ret
 }
