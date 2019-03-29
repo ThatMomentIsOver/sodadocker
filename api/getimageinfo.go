@@ -26,6 +26,12 @@ func errorPanic(e error) {
 		panic(e)
 	}
 }
+
+func errorFatal(e error) {
+	if e != nil {
+		log.Fatal(e)
+	}
+}
 func InspectImageLayers(imageID string) *imageInspectInfo {
 	if imageID == "" {
 		imageID = DockerID
