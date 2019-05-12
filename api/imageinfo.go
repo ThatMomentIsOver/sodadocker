@@ -166,6 +166,61 @@ type AffectVersion struct {
 	Version float32
 }
 
+type ContainersList []struct {
+	ID              string          `json:"Id"`
+	Names           []string        `json:"Names"`
+	Image           string          `json:"Image"`
+	ImageID         string          `json:"ImageID"`
+	Command         string          `json:"Command"`
+	Created         int             `json:"Created"`
+	Ports           []Ports         `json:"Ports"`
+	Labels          Labels          `json:"Labels"`
+	State           string          `json:"State"`
+	Status          string          `json:"Status"`
+	HostConfig      HostConfig      `json:"HostConfig"`
+	NetworkSettings NetworkSettings `json:"NetworkSettings"`
+	Mounts          []Mounts        `json:"Mounts"`
+}
+type Ports struct {
+	IP          string `json:"IP"`
+	PrivatePort int    `json:"PrivatePort"`
+	PublicPort  int    `json:"PublicPort"`
+	Type        string `json:"Type"`
+}
+type Labels struct {
+}
+type HostConfig struct {
+	NetworkMode string `json:"NetworkMode"`
+}
+type Bridge struct {
+	IPAMConfig          interface{} `json:"IPAMConfig"`
+	Links               interface{} `json:"Links"`
+	Aliases             interface{} `json:"Aliases"`
+	NetworkID           string      `json:"NetworkID"`
+	EndpointID          string      `json:"EndpointID"`
+	Gateway             string      `json:"Gateway"`
+	IPAddress           string      `json:"IPAddress"`
+	IPPrefixLen         int         `json:"IPPrefixLen"`
+	IPv6Gateway         string      `json:"IPv6Gateway"`
+	GlobalIPv6Address   string      `json:"GlobalIPv6Address"`
+	GlobalIPv6PrefixLen int         `json:"GlobalIPv6PrefixLen"`
+	MacAddress          string      `json:"MacAddress"`
+}
+type Networks struct {
+	Bridge Bridge `json:"bridge"`
+}
+type NetworkSettings struct {
+	Networks Networks `json:"Networks"`
+}
+type Mounts struct {
+	Type        string `json:"Type"`
+	Source      string `json:"Source"`
+	Destination string `json:"Destination"`
+	Mode        string `json:"Mode"`
+	RW          bool   `json:"RW"`
+	Propagation string `json:"Propagation"`
+}
+
 func sendHTTPReq(URI string, ReqMethod string) []uint8 {
 	var response *http.Response
 	var err error

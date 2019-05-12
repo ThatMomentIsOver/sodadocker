@@ -3,7 +3,7 @@ package main
 import (
 	"api"
 	"flag"
-	"fmt"
+	//"github.com/go-delve/delve/service/api"
 )
 
 var (
@@ -16,17 +16,19 @@ func main() {
 	var configPath = flag.String("config", "./src/api/config.json", "sodadocker config path")
 	flag.Parse()
 	api.LoadConfig(*configPath)
-	api.ExportImage("")
+	/*
+		api.ExportImage("")
 
-	if err := api.DecompressImage(); err != nil {
-		fmt.Println(err)
-	}
-	api.GetImageDpkg()
+		if err := api.DecompressImage(); err != nil {
+			fmt.Println(err)
+		}
+		api.GetImageDpkg()
+		api.CheckSSH()
+		api.PullNvdCVEDB()
+		api.DecompressCVEDB()
+		api.UnpackNVDfile()
+		//	api.CheckProductVul("gcc", "0")
+		api.ScanPackge()
+	*/
 	api.CheckSSH()
-	api.PullNvdCVEDB()
-	api.DecompressCVEDB()
-	api.UnpackNVDfile()
-	//	api.CheckProductVul("gcc", "0")
-	api.ScanPackge()
-
 }
